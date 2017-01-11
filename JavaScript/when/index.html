@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #traffic > li { display: block;}
+        #traffic span { display: inline-block; width: 50px; height: 50px; background-color: gray; margin: 5px; border-radius: 50%;}
+        #traffic.stop li:nth-child(1) span{ background-color: #a00;}
+        #traffic.wait li:nth-child(2) span{ background-color: #aa0;}
+        #traffic.pass li:nth-child(3) span{ background-color: #0a0;}
+    </style>
+</head>
+<body>
+    <ul id="traffic" class="wait">
+        <li><span></span></li>
+        <li><span></span></li>
+        <li><span></span></li>
+    </ul>
+<script>
+    const traffic = document.getElementById("traffic");
+    function start(traffic, stateList) {
+        var currentStateIndex = 0;
+        setInterval(function () {
+            var state = stateList[currentStateIndex];
+            traffic.className = state;
+            currentStateIndex = (currentStateIndex + 1) % stateList.length;
+
+        }, 2000);
+    }
+    function poll(...fnList) {
+        let stateIndex = 0;
+        return function (...args) {
+            let fn = fnList[stateIndex++ % fnList.length];
+            return fn.apply(this, args);
+        }
+    }
+    function setState(state) {
+        traffic.className = state;
+    }
+    let trafficStatePoll = poll(
+        setState.bind(null, "wait"),
+        setState.bind(null, "stop"),
+        setState.bind(null, "pass")
+    );
+    setInterval(trafficStatePoll, 2000);
+   // start(traffic, ["wait", "stop", "pass"])
+</script>
+</body>
+</html>
