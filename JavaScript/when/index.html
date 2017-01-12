@@ -18,7 +18,7 @@
         <li><span></span></li>
     </ul>
 <script>
-    const traffic = document.getElementById("traffic");
+    const trafficEl = document.getElementById("traffic");
     function start(traffic, stateList) {
         var currentStateIndex = 0;
         setInterval(function () {
@@ -43,8 +43,43 @@
         setState.bind(null, "stop"),
         setState.bind(null, "pass")
     );
-    setInterval(trafficStatePoll, 2000);
-   // start(traffic, ["wait", "stop", "pass"])
+    function TrafficProtocol(el, reset) {
+        this.subject = el;
+        this.autoReset = reset;
+        this.stateList = [];
+    }
+    TrafficProtocol.prototype.putState = function (fn) {
+        this.stateList.push(fn);
+    };
+    TrafficProtocol.prototype.reset = function () {
+        let subject = this.subject;
+        this.statePromise = Promise.resolve();
+        this.stateList.forEach((stateFn) => {
+            this.statePromise = this.statePromise.then( () => {
+                    return new Promise(resolve => {stateFn(subject, resolve)})
+             })
+        });
+        if (this.autoReset){ this.statePromise.then(this.reset.bind(this))}
+    };
+    TrafficProtocol.prototype.start = function () {
+        this.reset();
+    };
+    var traffic = new TrafficProtocol(trafficEl, false);
+    traffic.putState(function (subject, next) {
+        subject.className = "wait";
+        setTimeout(next, 1000);
+    });
+    traffic.putState(function (subject, next) {
+        subject.className = "stop";
+        setTimeout(next, 2000);
+    });
+    traffic.putState(function (subject, next) {
+        subject.className = "pass";
+        setTimeout(next, 3000);
+    });
+    traffic.start();
+    //setInterval(trafficStatePoll, 2000);
+   // start(trafficEl, ["wait", "stop", "pass"])
 </script>
 </body>
 </html>
